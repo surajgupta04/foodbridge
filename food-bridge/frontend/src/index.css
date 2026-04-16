@@ -1,0 +1,102 @@
+@import url('https://fonts.googleapis.com/css2?family=Cabinet+Grotesk:wght@400;500;700;800;900&family=Instrument+Serif:ital@0;1&family=Plus+Jakarta+Sans:wght@300;400;500;600&display=swap');
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  background: #fafaf8;
+  color: #0d0d0d;
+}
+
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: #fafaf8; }
+::-webkit-scrollbar-thumb { background: #e5e7eb; border-radius: 3px; }
+
+/* ── Buttons ── */
+.btn-primary {
+  background: #0d0d0d;
+  color: #fff;
+  font-weight: 600;
+  padding: 11px 24px;
+  border-radius: 10px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 14px;
+}
+.btn-primary:hover { background: #1f1f1f; transform: translateY(-1px); }
+
+.btn-secondary {
+  background: #fff;
+  color: #0d0d0d;
+  font-weight: 500;
+  padding: 11px 24px;
+  border-radius: 10px;
+  border: 1.5px solid #e5e7eb;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 14px;
+}
+.btn-secondary:hover { border-color: #9ca3af; }
+
+.btn-green {
+  background: #16a34a;
+  color: #fff;
+  font-weight: 600;
+  padding: 11px 24px;
+  border-radius: 10px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 14px;
+}
+.btn-green:hover { background: #15803d; transform: translateY(-1px); }
+
+/* ── Food card ── */
+.food-card {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  overflow: hidden;
+  transition: all 0.25s;
+}
+.food-card:hover { transform: translateY(-3px); box-shadow: 0 8px 32px rgba(0,0,0,0.08); }
+
+/* ── Input ── */
+.input-field {
+  width: 100%;
+  padding: 11px 16px;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 10px;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 14px;
+  background: #fff;
+  color: #0d0d0d;
+  outline: none;
+  transition: border 0.2s;
+}
+.input-field:focus { border-color: #16a34a; }
+.input-field::placeholder { color: #9ca3af; }
+
+/* ── Tag / pill ── */
+.tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #f0fdf4;
+  color: #16a34a;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 5px 12px;
+  border-radius: 100px;
+  border: 1px solid #bbf7d0;
+  letter-spacing: 0.04em;
+}
+
+/* ── Status badges ── */
+.badge-available { color: #16a34a; font-size: 12px; font-weight: 600; }
+.badge-claimed   { color: #f97316; font-size: 12px; font-weight: 600; }
+.badge-collected { color: #6b7280; font-size: 12px; font-weight: 600; }
