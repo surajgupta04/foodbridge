@@ -1,3 +1,9 @@
+
+
+https://github.com/user-attachments/assets/632114d9-38df-4bc6-a506-4072892d5476
+
+
+
 # 🍽️ FoodBridge — Real‑Time Food Rescue Platform
 
 FoodBridge is a full‑stack MERN application that connects restaurants with surplus food to nearby NGOs in real‑time, helping reduce food waste and fight hunger.
