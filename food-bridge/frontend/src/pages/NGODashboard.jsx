@@ -48,29 +48,43 @@ export default function NGODashboard() {
   const [claimedCode, setClaimedCode] = useState(null);
 
   useEffect(() => {
-    fetchPosts();
-    fetchMyClaims();
-    const socket = io('http://localhost:5000');
-    if (user?._id) socket.emit('joinRoom', user._id);
+  fetchPosts();
+  fetchMyClaims();
 
-    socket.on('newFoodAlert', (data) => {
-      setNotification({ message: `New food available: ${data.category} — ${data.quantity}`, id: data.id });
-      fetchPosts();
-      setTimeout(() => setNotification(null), 5000);
+  const socket = io('http://localhost:5000');
+  if (user?._id) socket.emit('joinRoom', user._id);
+
+  socket.on('newFoodAlert', (data) => {
+    setNotification({ 
+      message: `New food available: ${data.category} — ${data.quantity}`, 
+      id: data.id 
     });
-    socket.on('foodClaimed', () => { fetchPosts(); fetchMyClaims(); });
-    socket.on('foodCollected', () => { fetchPosts(); fetchMyClaims(); });
-    socket.on('foodExpired', ({ postId }) => setPosts(prev => prev.filter(p => p._id !== postId)));
-    return () => socket.disconnect();
-  }, []);
+    // Wait 500ms so MongoDB finishes writing before we fetch
+    setTimeout(() => {
+      api.get('/api/food').then(({ data: posts }) => {
+        setPosts(posts);
+        setLoading(false);
+      }).catch(err => console.error(err));
+    }, 500);
+    setTimeout(() => setNotification(null), 5000);
+  });
 
-  const fetchPosts = async () => {
-    try {
-      const { data } = await api.get('/api/food');
-      setPosts(data);
-    } catch (err) { console.error(err); }
-    finally { setLoading(false); }
-  };
+  socket.on('foodClaimed', () => { fetchPosts(); fetchMyClaims(); });
+  socket.on('foodCollected', () => { fetchPosts(); fetchMyClaims(); });
+  socket.on('foodExpired', ({ postId }) => 
+    setPosts(prev => prev.filter(p => p._id !== postId))
+  );
+
+  return () => socket.disconnect();
+}, []);
+
+const fetchPosts = async () => {
+  try {
+    const { data } = await api.get('/api/food');
+    setPosts([...data]); // spread forces new array reference → guaranteed re-render
+  } catch (err) { console.error(err); }
+  finally { setLoading(false); }
+};
 
   const fetchMyClaims = async () => {
     try {

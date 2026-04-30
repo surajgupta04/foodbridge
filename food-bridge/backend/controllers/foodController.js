@@ -3,8 +3,11 @@ import User from '../models/User.js';
 import { classifyFood } from '../config/huggingface.js';
 import { geocodeAddress } from '../utils/geocode.js';
 import { io } from '../server.js';
+import mongoose from 'mongoose';  // ← ADD THIS
 
 // POST /api/food — create a new food post
+
+
 export const createFoodPost = async (req, res) => {
   try {
     const { quantity, address, expiryDuration } = req.body;
@@ -19,7 +22,6 @@ export const createFoodPost = async (req, res) => {
     const durationMins = parseInt(expiryDuration) || 120;
     const expiresAt    = new Date(Date.now() + durationMins * 60 * 1000);
 
-    // Geocode the food pickup address
     let foodCoords = null;
     if (address && address.trim()) {
       foodCoords = await geocodeAddress(address);
@@ -30,7 +32,6 @@ export const createFoodPost = async (req, res) => {
       }
     }
 
-    // Build location object separately — avoid spread causing schema issues
     const locationData = { address };
     if (foodCoords) {
       locationData.type        = 'Point';
@@ -50,7 +51,6 @@ export const createFoodPost = async (req, res) => {
 
     console.log(`[FoodPost] Created with expiresAt: ${foodPost.expiresAt}`);
 
-    // Find NGOs within 10km
     let nearbyNGOIds = [];
     if (foodCoords) {
       const nearbyNGOs = await User.find({
@@ -99,25 +99,44 @@ export const createFoodPost = async (req, res) => {
 // GET /api/food — get all available food posts (excludes expired)
 export const getAvailableFoodPosts = async (req, res) => {
   try {
+    const now = new Date();
+    
+    // Step 1 — find ALL posts regardless of filters
+    const allPosts = await FoodPost.find({});
+    console.log('[Debug] Total posts in DB:', allPosts.length);
+    allPosts.forEach(p => {
+      console.log('[Debug] Post:', {
+        id: p._id,
+        status: p.status,
+        expiresAt: p.expiresAt,
+        restaurantId: p.restaurantId,
+        now: now,
+        isExpired: p.expiresAt < now,
+        isOwnPost: p.restaurantId.toString() === req.user.id
+      });
+    });
+
+    const userId = new mongoose.Types.ObjectId(req.user.id);
     const posts = await FoodPost.find({
       status:       'Available',
-      expiresAt:    { $gt: new Date() },
-      restaurantId: { $ne: req.user.id }
+      expiresAt:    { $gt: now },
+      restaurantId: { $ne: userId }
     })
-      .populate('restaurantId', 'name email')
-      .sort({ createdAt: -1 });
+    .populate('restaurantId', 'name email')
+    .sort({ createdAt: -1 });
 
+    console.log('[GetFood] Found:', posts.length);
     res.json(posts);
   } catch (error) {
+    console.error('[GetFood ERROR]', error.message);
     res.status(500).json({ message: error.message });
   }
 };
-
 // GET /api/food/my — restaurant sees their own posts
 export const getMyFoodPosts = async (req, res) => {
   try {
     const posts = await FoodPost.find({ restaurantId: req.user.id })
-      .populate('claimedBy', 'name phone') // NEW — replaces claimedBy ObjectId with { name, phone }
+      .populate('claimedBy', 'name phone')
       .sort({ createdAt: -1 });
 
     res.json(posts);
@@ -160,11 +179,7 @@ export const claimFoodPost = async (req, res) => {
 
     const updated = await FoodPost.findOneAndUpdate(
       { _id: req.params.id, status: 'Available' },
-      {
-        status: 'Claimed',
-        claimedBy: req.user.id,
-        confirmationCode
-      },
+      { status: 'Claimed', claimedBy: req.user.id, confirmationCode },
       { new: true }
     ).populate('restaurantId', 'name email');
 
@@ -178,9 +193,9 @@ export const claimFoodPost = async (req, res) => {
     });
 
     res.json({
-      message:         'Food claimed successfully',
+      message:          'Food claimed successfully',
       confirmationCode,
-      foodPost:        updated
+      foodPost:         updated
     });
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -211,7 +226,6 @@ export const markAsCollected = async (req, res) => {
     );
 
     io.emit('foodCollected', { id: updated._id });
-
     res.json({ message: 'Marked as collected', foodPost: updated });
   } catch (error) {
     res.status(500).json({ message: error.message });
